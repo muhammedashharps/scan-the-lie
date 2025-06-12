@@ -1,4 +1,5 @@
 import { GeminiResponse, ScanResult, Ingredient, ClaimVerdict } from '../types/types';
+import { UserPreferences } from '../types/questionnaire';
 
 interface GeminiError {
   error?: {
@@ -375,7 +376,8 @@ For each claim, determine if it's "True", "False", or "Misleading" based on the 
 export async function processProductScan(
   apiKey: string,
   frontImage: string,
-  backImage: string
+  backImage: string,
+  userPreferences?: UserPreferences | null
 ): Promise<ScanResult> {
   try {
     console.log('Starting product scan analysis...');
@@ -459,6 +461,99 @@ export async function processProductScan(
     
     // Step 4: Calculate health score based on ingredient risks and claim verdicts
     const healthScore = calculateHealthScore(analyzedIngredients);
+
+    // Step 5: Generate personalized analysis if user preferences are provided
+    let personalizedAnalysis = {};
+    if (userPreferences) {
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Analyze this product specifically for this user's health profile and preferences. Return ONLY a valid JSON object with this exact structure:
+{
+  "concerns": [
+    {
+      "issue": "brief issue description",
+      "explanation": "detailed explanation"
+    }
+  ],
+  "recommendations": [
+    "specific recommendation"
+  ],
+  "compatibility": "High/Moderate/Low"
+}
+
+Product Information:
+${JSON.stringify({
+  productName,
+  brand,
+  ingredients: analyzedIngredients,
+  nutritionFacts,
+  claims
+}, null, 2)}
+
+User Health Profile:
+${JSON.stringify({
+  healthConcerns: userPreferences.healthConcerns,
+  allergies: userPreferences.allergies,
+  dietaryPreferences: userPreferences.dietaryPreferences
+}, null, 2)}
+
+Guidelines:
+1. Focus on ingredients and nutrition that specifically relate to the user's health concerns, allergies, and dietary preferences
+2. Flag any ingredients that might conflict with their health conditions
+3. Consider their dietary restrictions when determining compatibility
+4. Provide specific, actionable recommendations
+5. Keep explanations concise but informative`
+              }]
+            }],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 1024,
+            },
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to generate analysis: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+          throw new Error('Invalid API response format');
+        }
+
+        const responseText = data.candidates[0].content.parts[0].text;
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('Invalid analysis format');
+        }
+        
+        const analysis = JSON.parse(jsonMatch[0]);
+        if (!analysis.concerns || !analysis.recommendations || !analysis.compatibility) {
+          throw new Error('Incomplete analysis data');
+        }
+
+        // Generate a hash of the user preferences to use as a key
+        const relevantData = {
+          healthConcerns: userPreferences.healthConcerns,
+          allergies: userPreferences.allergies,
+          dietaryPreferences: userPreferences.dietaryPreferences
+        };
+        const preferenceHash = btoa(JSON.stringify(relevantData));
+
+        personalizedAnalysis = {
+          [preferenceHash]: analysis
+        };
+      } catch (error) {
+        console.error('Error generating personalized analysis:', error);
+      }
+    }
     
     // Build the final scan result
     const scanResult: ScanResult = {
@@ -469,16 +564,16 @@ export async function processProductScan(
       nutritionFacts,
       claimVerdicts: verifiedClaims,
       healthScore,
-      personalizedAnalysis: {} // Initialize empty personalizedAnalysis object
+      personalizedAnalysis
     };
     
-    console.log('Scan completed successfully:', scanResult);
+    console.log('Scan completed successfully');
     return scanResult;
   } catch (error) {
     console.error('Error processing product scan:', error);
     throw error;
   }
-}
+};
 
 function calculateHealthScore(ingredients: Ingredient[]): number {
   // Base score starts at 50 (neutral)

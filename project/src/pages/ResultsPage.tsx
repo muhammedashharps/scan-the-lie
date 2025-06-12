@@ -50,7 +50,7 @@ const ResultsPage: React.FC = () => {
       setProcessing(true);
       setLoading(true);
       
-      const result = await processProductScan(apiKey, scanData.frontImage, scanData.backImage);
+      const result = await processProductScan(apiKey, scanData.frontImage, scanData.backImage, userPreferences);
       
       const updatedScan: ProductScan = {
         ...scanData,

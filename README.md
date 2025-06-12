@@ -10,7 +10,8 @@
 [![Made with React](https://img.shields.io/badge/Made%20with-React-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org)
 [![Powered by Gemini AI](https://img.shields.io/badge/Powered%20by-Gemini%20AI-4285F4?style=for-the-badge&logo=google)](https://cloud.google.com/gemini)
 
-[📸 Try Demo](https://scanthelie.vercel.app) 
+[📸 Try Demo](https://scanthelie.vercel.app) • [📚 Documentation](./docs/SIMPLE_DOCS.md) • [🤝 Contributing](./CONTRIBUTING.md) • [📝 Report Bug](https://github.com/muhammedashharps/scanthelie/issues)
+
 </div>
 
 ### 📸 Try with these example images:

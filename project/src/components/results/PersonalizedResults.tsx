@@ -19,10 +19,8 @@ const PersonalizedResults: React.FC<PersonalizedResultsProps> = ({
   userPreferences,
   apiKey
 }) => {
-  const [personalizedAnalysis, setPersonalizedAnalysis] = useState<PersonalizedAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   const generatePreferenceHash = useCallback((preferences: UserPreferences): string => {
     const relevantData = {
@@ -40,133 +38,15 @@ const PersonalizedResults: React.FC<PersonalizedResultsProps> = ({
       return;
     }
 
-    let isMounted = true;
     const preferenceHash = generatePreferenceHash(userPreferences);
-    
-    const initializeAnalysis = async () => {
-      try {
-        if (scanResult.personalizedAnalysis?.[preferenceHash]) {
-          if (isMounted) {
-            setPersonalizedAnalysis(scanResult.personalizedAnalysis[preferenceHash]);
-            setLoading(false);
-          }
-          return;
-        }
+    const analysis = scanResult.personalizedAnalysis?.[preferenceHash];
 
-        setIsUpdating(true);
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: `Analyze this product specifically for this user's health profile and preferences. Return ONLY a valid JSON object with this exact structure:
-{
-  "concerns": [
-    {
-      "issue": "brief issue description",
-      "explanation": "detailed explanation"
+    if (!analysis) {
+      setError('No personalized analysis available for your current preferences');
+    } else {
+      setError(null);
     }
-  ],
-  "recommendations": [
-    "specific recommendation"
-  ],
-  "compatibility": "High/Moderate/Low"
-}
-
-Product Information:
-${JSON.stringify({
-  productName: scanResult.productName,
-  brand: scanResult.brand,
-  ingredients: scanResult.ingredients,
-  nutritionFacts: scanResult.nutritionFacts,
-  claims: scanResult.claims
-}, null, 2)}
-
-User Health Profile:
-${JSON.stringify({
-  healthConcerns: userPreferences.healthConcerns,
-  allergies: userPreferences.allergies,
-  dietaryPreferences: userPreferences.dietaryPreferences
-}, null, 2)}
-
-Guidelines:
-1. Focus on ingredients and nutrition that specifically relate to the user's health concerns, allergies, and dietary preferences
-2. Flag any ingredients that might conflict with their health conditions
-3. Consider their dietary restrictions when determining compatibility
-4. Provide specific, actionable recommendations
-5. Keep explanations concise but informative`
-              }]
-            }],
-            generationConfig: {
-              temperature: 0.2,
-              maxOutputTokens: 1024,
-            },
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to generate analysis: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-          throw new Error('Invalid API response format');
-        }
-
-        const responseText = data.candidates[0].content.parts[0].text;
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-          throw new Error('Invalid analysis format');
-        }
-        
-        const analysis = JSON.parse(jsonMatch[0]) as PersonalizedAnalysis;
-        if (!analysis.concerns || !analysis.recommendations || !analysis.compatibility) {
-          throw new Error('Incomplete analysis data');
-        }
-
-        const updatedScanResult: ScanResult = {
-          ...scanResult,
-          personalizedAnalysis: {
-            ...scanResult.personalizedAnalysis,
-            [preferenceHash]: analysis
-          }
-        };
-
-        const currentScan = await userService.getScanById(scanId);
-        if (!currentScan) {
-          throw new Error('Scan not found in database');
-        }
-
-        await userService.updateScanResult(scanId, {
-          ...currentScan,
-          result: updatedScanResult
-        });
-
-        if (isMounted) {
-          setPersonalizedAnalysis(analysis);
-          setError(null);
-        }
-      } catch (err) {
-        console.error('Error in personalized analysis:', err);
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Failed to generate personalized analysis');
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-          setIsUpdating(false);
-        }
-      }
-    };
-
-    initializeAnalysis();
-
-    return () => {
-      isMounted = false;
-    };
+    setLoading(false);
   }, [scanResult, userPreferences, apiKey, generatePreferenceHash, scanId]);
 
   if (loading) {
@@ -174,7 +54,7 @@ Guidelines:
       <Card>
         <div className="flex items-center justify-center py-6">
           <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="ml-2 text-gray-600">Analyzing for your health profile...</span>
+          <span className="ml-2 text-gray-600">Loading analysis...</span>
         </div>
       </Card>
     );
@@ -191,6 +71,9 @@ Guidelines:
       </Card>
     );
   }
+
+  const preferenceHash = generatePreferenceHash(userPreferences);
+  const personalizedAnalysis = scanResult.personalizedAnalysis?.[preferenceHash];
 
   if (!personalizedAnalysis) {
     return null;
@@ -248,7 +131,7 @@ Guidelines:
             <h4 className="text-sm font-semibold text-gray-700 mb-2">Recommendations</h4>
             <ul className="list-disc list-inside space-y-1">
               {personalizedAnalysis.recommendations.map((recommendation, index) => (
-                <li key={index} className="text-sm text-gray-600">{recommendation}</li>
+                <li key={index} className="text-gray-700">{recommendation}</li>
               ))}
             </ul>
           </div>
