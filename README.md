@@ -17,11 +17,18 @@
 ### 📸 Try with these example images:
 
 <div align="center">
-<img src="./.github/assets/example1.jpg" width="300" alt="Example 1 - Clear product label"/>
-<img src="./.github/assets/example2.jpg" width="300" alt="Example 2 - Clear ingredients list"/>
+<img src="./.github/assets/example3.jpg" width="300" alt="Example 1 - Clear product label"/>
+<img src="./.github/assets/example31.jpg" width="300" alt="Example 2 - Clear ingredients list"/>
+
+</div>
+
+<div align="center">
+<img src="./.github/assets/example5.jpg" width="300" alt="Example 1 - Clear product label"/>
+<img src="./.github/assets/example51.jpg" width="300" alt="Example 2 - Clear ingredients list"/>
 
 *For best results, ensure your product label images are clear and well-lit like these examples*
 </div>
+
 
 [![Tech Stack](https://img.shields.io/badge/Tech%20Stack-⚡-yellow)](#)
 [![React](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react)](https://reactjs.org/)
