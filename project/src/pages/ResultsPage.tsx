@@ -19,12 +19,26 @@ import { useAuth } from '../contexts/AuthContext';
 const ResultsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addToHistory, apiKey, loading, setLoading, userPreferences } = useAppContext();
+  const { addToHistory, apiKey, loading: contextLoading, setLoading, userPreferences } = useAppContext();
   const { user } = useAuth();
   
   const [scan, setScan] = useState<ProductScan | undefined>(undefined);
   const [processing, setProcessing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'personal' | 'claims'>('ingredients');
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  
+  useEffect(() => {
+    if (userPreferences !== null) {
+      setPreferencesLoaded(true);
+    }
+  }, [userPreferences]);
+  
+  useEffect(() => {
+    if (activeTab === 'personal' && !userPreferences?.completedQuestionnaire) {
+      setActiveTab('ingredients');
+    }
+  }, [activeTab, userPreferences]);
   
   const processScan = async (scanData: ProductScan) => {
     if (!apiKey) {
@@ -124,7 +138,7 @@ const ResultsPage: React.FC = () => {
     );
   }
   
-  if (!scan || processing || loading) {
+  if (contextLoading) {
     return (
       <div className="max-w-3xl mx-auto">
         <Button variant="outline" size="sm" onClick={handleBack} leftIcon={<ArrowLeft size={16} />} className="mb-6">
@@ -134,9 +148,33 @@ const ResultsPage: React.FC = () => {
         <Card>
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Analyzing Product</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Loading...</h3>
             <p className="text-gray-500 text-center max-w-md">
-              Our AI is examining your product's images, extracting ingredients, and verifying claims. This may take a moment.
+              Fetching your data...
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+  
+  if (!scan || processing) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <Button variant="outline" size="sm" onClick={handleBack} leftIcon={<ArrowLeft size={16} />} className="mb-6">
+          Back
+        </Button>
+        
+        <Card>
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {scan?.status === 'pending' ? 'Analyzing Product' : 'Fetching food data from the database...'}
+            </h3>
+            <p className="text-gray-500 text-center max-w-md">
+              {scan?.status === 'pending' 
+                ? "Our AI is examining your product's images, extracting ingredients, and verifying claims. This may take a moment."
+                : 'Retrieving your scan results. Please wait...'}
             </p>
           </div>
         </Card>
@@ -219,33 +257,69 @@ const ResultsPage: React.FC = () => {
       </div>
 
       <Card className="mb-8">
-        <IngredientTree ingredients={result.ingredients} />
-      </Card>
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px">
+            <button
+              onClick={() => setActiveTab('ingredients')}
+              className={`py-4 px-6 text-sm font-medium border-b-2 ${
+                activeTab === 'ingredients'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Ingredient Breakdown
+            </button>
+            {!contextLoading && userPreferences?.completedQuestionnaire && (
+              <button
+                onClick={() => setActiveTab('personal')}
+                className={`py-4 px-6 text-sm font-medium border-b-2 ${
+                  activeTab === 'personal'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Personal Analysis
+              </button>
+            )}
+            <button
+              onClick={() => setActiveTab('claims')}
+              className={`py-4 px-6 text-sm font-medium border-b-2 ${
+                activeTab === 'claims'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Claim Verification
+            </button>
+          </nav>
+        </div>
 
-      {userPreferences?.completedQuestionnaire && (
-        <div className="mb-8">
-          <PersonalizedResults
-            scanId={id!}
-            scanResult={result}
-            userPreferences={userPreferences}
-            apiKey={apiKey}
-          />
+        <div className="p-6">
+          {activeTab === 'ingredients' && (
+            <IngredientTree ingredients={result.ingredients} />
+          )}
+          
+          {activeTab === 'personal' && !contextLoading && userPreferences?.completedQuestionnaire && (
+            <PersonalizedResults
+              scanId={id!}
+              scanResult={result}
+              userPreferences={userPreferences}
+              apiKey={apiKey}
+            />
+          )}
+          
+          {activeTab === 'claims' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <ClaimVerifier claimVerdicts={result.claimVerdicts} />
+              </div>
+              <div>
+                <NutritionCard nutritionFacts={result.nutritionFacts} />
+              </div>
+            </div>
+          )}
         </div>
-      )}
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2">
-          <Card>
-            <ClaimVerifier claimVerdicts={result.claimVerdicts} />
-          </Card>
-        </div>
-        
-        <div>
-          <Card>
-            <NutritionCard nutritionFacts={result.nutritionFacts} />
-          </Card>
-        </div>
-      </div>
+      </Card>
       
       <div className="bg-blue-50 rounded-lg p-6 mb-8">
         <h3 className="text-lg font-semibold text-blue-900 mb-2">Disclaimer</h3>

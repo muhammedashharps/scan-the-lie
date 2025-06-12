@@ -14,7 +14,7 @@ import { useAppContext } from './context/AppContext';
 import { useAuth } from './contexts/AuthContext';
 
 const App: React.FC = () => {
-  const { hasCompletedQuestionnaire, setUserPreferences } = useAppContext();
+  const { hasCompletedQuestionnaire, setUserPreferences, loading } = useAppContext();
   const { user } = useAuth();
 
   const handleQuestionnaireComplete = (preferences: {
@@ -30,12 +30,13 @@ const App: React.FC = () => {
 
   return (
     <>
-      {user && !hasCompletedQuestionnaire && (
-        <Questionnaire onComplete={handleQuestionnaireComplete} />
+      {user && !loading && !hasCompletedQuestionnaire && (
+        <Questionnaire onComplete={async (preferences) => {
+          await handleQuestionnaireComplete(preferences);
+        }} />
       )}
       <Routes>
         <Route path="/login" element={<Login />} />
-        
         <Route
           path="/"
           element={

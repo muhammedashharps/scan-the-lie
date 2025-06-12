@@ -2,7 +2,7 @@
 
 <div align="center">
 
-### AI-Powered Food Label Analysis
+### A Web App To Analyze Packaged Food Products.
 
 [<img src="https://img.shields.io/badge/LIVE_DEMO-Try_Now-FF4081?style=for-the-badge&logoColor=white" width="200"/>](https://scanthelie.vercel.app)
 
@@ -10,8 +10,7 @@
 [![Made with React](https://img.shields.io/badge/Made%20with-React-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org)
 [![Powered by Gemini AI](https://img.shields.io/badge/Powered%20by-Gemini%20AI-4285F4?style=for-the-badge&logo=google)](https://cloud.google.com/gemini)
 
-[📸 Try Demo](https://scanthelie.vercel.app) • [📚 Documentation](./docs/SIMPLE_DOCS.md) • [🤝 Contributing](./CONTRIBUTING.md) • [📝 Report Bug](https://github.com/muhammedashharps/scanthelie/issues)
-
+[📸 Try Demo](https://scanthelie.vercel.app) 
 </div>
 
 ### 📸 Try with these example images:
@@ -111,45 +110,27 @@ sequenceDiagram
 - **Backend**: Firebase
 - **AI Integration**: Gemini AI
 
-## 🤖 AI Assistant Features
+
+## 📱 Features
+
+- **Analyzes packaged food product labels in real-time**
+- **Verifies marketing claims against actual ingredients**
+- **Provides detailed breakdowns of complex ingredients in simpler terms**
+- **Offers personalized health insights based on user dietary preferences**
+- **Tracks scan history for informed decision-making**
+- **A Chatbot that responds to any health related query related to the scanned product.**
+
+## 🤖 Chatbot Features
 
 The integrated AI chatbot in the websiteserves as your personal product expert:
 
 - **Instant Answers**: Get immediate responses about ingredients, nutrition, and health claims
 - **Context-Aware**: The chatbot understands the scanned product's context for accurate answers
-- **Health Insights**: Receive detailed explanations about health implications
-- **Ingredient Analysis**: Understand complex ingredient names and their purposes
-- **Safety Alerts**: Get warnings about potential allergens or harmful ingredients
 - **Smart Recommendations**: Receive personalized suggestions based on your health profile
 
-The AI assistant is powered by Google's Gemini AI, providing:
-- Natural language understanding
-- Real-time response generation
-- Product-specific knowledge
-- Health and safety awareness
-- Personalized interactions
 
 
-## 📱 Other Features
 
-- **Smart Label Scanning**
-  - OCR-powered text extraction
-  - Ingredient analysis
-  - Claim verification
-
-- **Personalized Insights**
-  - Health score calculation
-  - Dietary recommendations
-  - Allergen alerts
-
-- **User Dashboard**
-  - Scan history
-
-
-- **AI-Powered Analysis**
-  - Marketing claim verification
-  - Ingredient safety assessment
-  - Nutritional value analysis
 
 
 
