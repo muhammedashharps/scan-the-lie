@@ -92,19 +92,19 @@ sequenceDiagram
     participant User
     participant App
     participant Firebase
-    participant GeminiAI
+    participant LLM
     participant Chatbot
 
     User->>App: Scans Product Label
     App->>Firebase: Upload Image
     Firebase-->>App: Image URL
-    App->>GeminiAI: Analyze Image
-    GeminiAI-->>App: Analysis Results
+    App->>LLM: Analyze Image
+    LLM-->>App: Analysis Results
     App->>Firebase: Store Results
     App->>User: Display Insights
     User->>Chatbot: Ask Questions
-    Chatbot->>GeminiAI: Process Query
-    GeminiAI-->>Chatbot: Generate Response
+    Chatbot->>LLM: Process Query
+    LLM-->>Chatbot: Generate Response
     Chatbot->>User: Provide Answer
     User->>App: Save to History
     App->>Firebase: Update User History
